@@ -56,7 +56,8 @@ userSchema.methods = {
                 .digest("hex");
         }   catch (err) {
                 return "";
-        }                               
+        }       
+                                
     }
 }
 
