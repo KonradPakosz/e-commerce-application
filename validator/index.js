@@ -1,4 +1,4 @@
-exports.userSignupValidator = (req, res) => {
+exports.userSignupValidator = (req, res, next) => {
     req.check('name', 'Name is required').notEmpty()
     req.check('email', 'Email must be between 3 to 35 characters')
         .matches(/.+\@.+\..+/)
@@ -19,4 +19,4 @@ exports.userSignupValidator = (req, res) => {
             return res.status(400).json({ error: firstError });
         }
     next();
-}
+};
