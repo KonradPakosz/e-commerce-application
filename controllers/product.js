@@ -62,9 +62,8 @@ exports.create = (req, res) => {
             }
             res.json(result)
         });
-    });
-    
-}
+    });  
+};
 
 exports.remove = (req, res) => {
     let product = req.product;
@@ -88,7 +87,7 @@ exports.update = (req, res) => {
             return res.status(400).json({
                 error: "Product could not be uploaded"
             });
-        }
+        };
 
         //validation
         const { name, description, price, category, quantity, shipping } = fields;
@@ -97,7 +96,7 @@ exports.update = (req, res) => {
             return res.status(400).json({
                 error: "All fields must be filled in"
             });
-        }
+        };
 
         //same as create but overwrite current object instead
         let product = req.product
@@ -123,9 +122,8 @@ exports.update = (req, res) => {
             }
             res.json(result)
         });
-    });
-    
-}
+    });   
+};
 
 // New and Popular products
 // New -> sort by arrival /products?sortBy=sold&order=desc&limit=4
@@ -151,7 +149,7 @@ exports.list = (req, res) => {
         };
         res.json(products);
     })
-}
+};
 
 //find similar products by category
 exports.listRelated = (req, res) => {
@@ -169,6 +167,69 @@ exports.listRelated = (req, res) => {
         };
         res.json(products);
     });
-}
+};
+
+exports.listCategories = (req, res) => {
+    Product.distinct("category", {}, (err, categories) => {
+        if(err) {
+            return res.status(400).json({
+                error: 'Categories not found'
+            });
+        };
+        res.json(categories);
+    });
+};
 
 
+
+exports.listBySearch = (req, res) => {
+    let order = req.body.order ? req.body.order : "desc";
+    let sortBy = req.body.sortBy ? req.body.sortBy : "_id";
+    let limit = req.body.limit ? parseInt(req.body.limit) : 100;
+    let skip = parseInt(req.body.skip);
+    let findArgs = {};
+ 
+    // console.log(order, sortBy, limit, skip, req.body.filters);
+    console.log("findArgs", findArgs);
+ 
+    for (let key in req.body.filters) {
+        if (req.body.filters[key].length > 0) {
+            if (key === "price") {
+                // gte -  greater than price [0-10]
+                // lte - less than
+                findArgs[key] = {
+                    $gte: req.body.filters[key][0],
+                    $lte: req.body.filters[key][1]
+                };
+            } else {
+                findArgs[key] = req.body.filters[key];
+            }
+        }
+    };
+ 
+    Product.find(findArgs)
+        .select("-photo")
+        .populate("category")
+        .sort([[sortBy, order]])
+        .skip(skip)
+        .limit(limit)
+        .exec((err, data) => {
+            if (err) {
+                return res.status(400).json({
+                    error: "Products not found"
+                });
+            };
+            res.json({
+                size: data.length,
+                data
+            });
+        });
+};
+
+exports.photo = (req, res, next) => {
+    if (req.product.photo.data) {
+        res.set('Content-Type', req.product.photo.contentType); //we send the image in whichever format it is saved in
+        return res.send(req.product.photo.data); //respond with the photo data
+    };
+    next();
+};
