@@ -28,3 +28,41 @@ exports.categoryById = (req, res, next, id) => {
 exports.read = (req, res) => {
     return res.json(req.category);
 };
+
+exports.remove = (req, res) => {
+    const category = req.category;
+    category.remove((err, deletedCategory) => {
+        if(err) { 
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        };
+        res.json({
+            message: "Category was deleted successfully"
+        });
+    });
+};
+
+exports.update = (req, res) => {
+    const category = req.category;
+    category.name = req.body.name;
+    category.save((err, data) => {
+        if(err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        }
+        res.json(data);
+    });
+};
+
+exports.list = (req, res) => {
+    Category.find().exec((err, data) => {
+        if(err) {
+            return res.status(400).json({
+                error: errorHandler(err)
+            });
+        };
+        res.json(data);
+    });
+};
